@@ -71,12 +71,23 @@ class FeedHandler:
             LOG.info(self.config.log_msg)
 
         if self.config.uvloop:
-            try:
-                import uvloop
-                asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-                LOG.info('FH: uvloop initalized')
-            except ImportError:
-                LOG.info("FH: uvloop not initialized")
+            # NOTE: uvloop is not supported on windows, so we use winloop instead
+            if sys.platform.startswith('win'):
+                LOG.info("FH: uvloop not available on windows")
+                try:
+                    import winloop
+                    asyncio.set_event_loop_policy(winloop.EventLoopPolicy())
+                    LOG.info('FH: winloop initalized')
+                except ImportError:
+                    LOG.info("FH: winloop not initialized")
+            else:
+                try:
+                    import uvloop
+                    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+                    LOG.info('FH: uvloop initalized')
+                except ImportError:
+                    LOG.info("FH: uvloop not initialized")
+
 
     def add_feed(self, feed, loop=None, **kwargs):
         """
